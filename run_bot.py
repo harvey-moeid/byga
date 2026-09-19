@@ -29,6 +29,7 @@ from state_store import (
     get_active_signals,
     add_signal,
     update_signal_status,
+    set_recent_candles,
 )
 
 SCORE_SEND_THRESHOLD = 70
@@ -187,6 +188,11 @@ def main() -> int:
             log_error(state, "fetcher", f"fetch_candles({tf}) failed: {exc}")
             print(f"ERROR fetching {tf} candles: {exc}", file=sys.stderr)
             candles_by_tf[tf] = []
+
+    # 1a) Simpan snapshot candle 15m (untuk chart candlestick di dashboard).
+    # Kalau fetch gagal (list kosong), biarkan snapshot lama di state apa adanya.
+    if candles_by_tf.get("15m"):
+        set_recent_candles(state, "15m", candles_by_tf["15m"])
 
     # 1b) Snapshot IRGA opsional -- sekali per run, dipakai untuk semua
     # candle baru di run ini. Gagal/absen -> None, bot lanjut tanpa overlay.

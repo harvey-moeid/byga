@@ -34,9 +34,21 @@ export interface Signal {
   closedAt?: string;
 }
 
+/** Candle OHLC ringkas (lihat state_store.set_recent_candles), untuk chart candlestick. */
+export interface Candle {
+  /** openTime candle, epoch ms. */
+  t: number;
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+}
+
 export interface BotState {
   signals?: Signal[];
   last_price?: number | null;
   /** ISO 8601 waktu run bot terakhir; null sebelum bot pernah jalan. */
   last_run_at?: string | null;
+  /** Snapshot candle terakhir per timeframe (saat ini hanya '15m'). */
+  candles?: Record<string, Candle[]>;
 }

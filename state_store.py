@@ -18,10 +18,12 @@ DEFAULT_STATE = {
     "error_logs": [],     # beberapa error terakhir, untuk debugging (bukan pengganti log CI)
     "last_price": None,   # mark price terakhir, untuk ditampilkan di dashboard
     "last_run_at": None,  # timestamp run terakhir (ISO), untuk ditampilkan di dashboard
+    "candles": {"15m": []},  # snapshot candle 15m terakhir, untuk chart candlestick di dashboard
 }
 
 MAX_ERROR_LOGS = 50
 MAX_SIGNALS_KEPT = 2000  # cegah state.json tumbuh tanpa batas
+MAX_CANDLES_KEPT = 60    # ~15 jam candle 15m, cukup untuk chart dashboard
 
 
 def load_state() -> dict:
@@ -41,10 +43,30 @@ def save_state(state: dict) -> None:
         state["signals"] = state["signals"][-MAX_SIGNALS_KEPT:]
     if len(state["error_logs"]) > MAX_ERROR_LOGS:
         state["error_logs"] = state["error_logs"][-MAX_ERROR_LOGS:]
+    for tf, candles in state.get("candles", {}).items():
+        if len(candles) > MAX_CANDLES_KEPT:
+            state["candles"][tf] = candles[-MAX_CANDLES_KEPT:]
 
     with open(STATE_PATH, "w", encoding="utf-8") as f:
         json.dump(state, f, indent=2, ensure_ascii=False)
         f.write("\n")
+
+
+def set_recent_candles(state: dict, timeframe: str, candles: List[dict]) -> None:
+    """Simpan snapshot OHLC ringkas (untuk chart dashboard), maks MAX_CANDLES_KEPT
+    candle terakhir. Dipanggil tiap run dengan hasil fetch_candles() -- hanya
+    field yang dipakai chart yang disimpan supaya state.json tetap ramping."""
+    recent = candles[-MAX_CANDLES_KEPT:]
+    state.setdefault("candles", {})[timeframe] = [
+        {
+            "t": c["openTime"],
+            "o": float(c["open"]),
+            "h": float(c["high"]),
+            "l": float(c["low"]),
+            "c": float(c["close"]),
+        }
+        for c in recent
+    ]
 
 
 def log_error(state: dict, worker_name: str, message: str) -> None:
