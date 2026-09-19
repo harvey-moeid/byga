@@ -1,0 +1,94 @@
+# BTC Signal Dashboard
+
+Dashboard statis untuk melihat sinyal dari bot (`../run_bot.py`). Membaca
+`state.json` langsung dari GitHub lewat raw URL, jadi **tidak butuh API server**.
+
+**Stack:** Vite · React 19 · TypeScript · Tailwind CSS v4 · pnpm
+
+## Menjalankan lokal
+
+Butuh Node ≥ 22 dan pnpm (`corepack enable` akan memasang versi yang tepat
+sesuai field `packageManager` di `package.json`).
+
+```bash
+cd dashboard
+pnpm install
+pnpm dev          # http://localhost:5173
+```
+
+Secara default dashboard menunjuk ke URL placeholder. Dua cara mengarahkannya
+ke data asli:
+
+1. Klik **Pengaturan sumber data** di halaman, isi raw URL, klik **Simpan**
+   (tersimpan di `localStorage` browser), atau
+2. Buat `dashboard/.env.local`:
+   ```
+   VITE_STATE_URL=https://raw.githubusercontent.com/<user>/<repo>/main/state.json
+   ```
+   Untuk tes dengan file lokal, boleh pakai path relatif: `VITE_STATE_URL=./state.json`
+   lalu taruh `state.json` di `dashboard/public/`.
+
+| Script | Fungsi |
+|---|---|
+| `pnpm dev` | dev server dengan hot reload |
+| `pnpm typecheck` | type-check saja (`tsc --noEmit`) |
+| `pnpm build` | type-check + build produksi ke `dist/` |
+| `pnpm preview` | serve hasil build untuk dicek |
+
+## Deploy (GitHub Pages)
+
+Deploy otomatis lewat `.github/workflows/dashboard.yml`.
+
+**Setup sekali saja:** Settings → Pages → **Source: GitHub Actions**.
+(Bukan lagi "Deploy from branch" seperti versi HTML lama.)
+
+Setelah itu, setiap push ke `main` yang mengubah `dashboard/**` akan
+build & deploy ulang. Workflow meng-inject `VITE_STATE_URL` yang menunjuk ke
+`state.json` di repo yang sama, jadi tidak perlu setting manual di browser.
+
+> Commit `state.json` dari bot (tiap 5 menit) **tidak** memicu build. Tidak perlu:
+> dashboard mengambil data saat runtime, bukan saat build.
+
+Repo harus **public** agar `raw.githubusercontent.com` bisa dibaca tanpa autentikasi.
+
+## Struktur
+
+```
+src/
+├── main.tsx              entry point
+├── App.tsx               susunan halaman; menghubungkan hooks dan komponen
+├── config.ts             konstanta (interval refresh, key storage, URL default)
+├── types.ts              tipe data state.json (cerminan engine/scoring.py & state_store.py)
+├── hooks/
+│   ├── useStateJson.ts   polling + status koneksi
+│   └── useSourceUrl.ts   URL sumber data + penyimpanan di localStorage
+├── lib/
+│   ├── format.ts         format angka & waktu
+│   └── stats.ts          hitung sinyal aktif, riwayat, win rate (fungsi murni)
+└── components/           StatCard, StatusIndicator, StatusBadge, SourceSettings,
+                          ActiveSignalsTable, HistoryTable
+```
+
+## Keputusan desain
+
+- **`base: './'` di `vite.config.ts`.** Pages menyajikan project site di
+  `/<nama-repo>/`; path relatif membuat build jalan tanpa hardcode nama repo.
+- **Data lama tidak dibuang saat fetch gagal.** Hanya indikator koneksi yang
+  berubah merah. Lebih berguna daripada layar kosong saat koneksi putus sesaat.
+- **Cache-buster `?t=` + `cache: 'no-store'`.** `raw.githubusercontent.com`
+  meng-cache respons beberapa menit; tanpa ini dashboard bisa menampilkan data basi.
+- **Logika turunan di `lib/stats.ts`, bukan di komponen.** Fungsi murni, mudah dites,
+  tidak tercampur urusan tampilan.
+- **Tidak ada `innerHTML`.** React meng-escape semua nilai, jadi isi `state.json`
+  (mis. nama pattern) tidak bisa menyisipkan HTML/script. Versi HTML lama
+  merakit tabel dengan template string tanpa escape.
+- **Tailwind lewat plugin Vite**, bukan CDN. CSS di-generate saat build
+  (~12 kB) dan tidak ada skrip pihak ketiga yang dimuat saat runtime.
+- **`StatusBadge` bertipe `Record<SignalStatus, ...>`.** Kalau `SignalStatus`
+  ditambah status baru, TypeScript memaksa kita memberi warna untuknya.
+
+## Kalau bot menambah/mengubah field
+
+Sumber kebenaran skema ada di Python (`engine/scoring.py`, `state_store.py`).
+Sesuaikan `src/types.ts`, lalu `pnpm typecheck` akan menunjukkan komponen
+mana yang ikut terpengaruh.

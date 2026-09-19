@@ -1,0 +1,58 @@
+name: BTC Signal Bot
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+# Cegah dua run tumpang tindih (misal run sebelumnya belum selesai commit)
+# yang bisa bikin race condition pada state.json.
+concurrency:
+  group: btc-signal-bot
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_ALERT_WEBHOOK: ${{ secrets.DISCORD_ALERT_WEBHOOK }}
+          # Opsional -- overlay IRGA (lihat engine/irga.py). Kalau
+          # secret ini tidak di-set, envnya jadi string kosong dan bot
+          # otomatis jalan tanpa overlay, sama seperti sebelumnya.
+          IRGA_API_URL: ${{ secrets.IRGA_API_URL }}
+          IRGA_MAX_AGE_HOURS: ${{ secrets.IRGA_MAX_AGE_HOURS }}
+        run: python run_bot.py
+
+      - name: Commit & push state.json jika berubah
+        run: |
+          git config user.name "btc-signal-bot"
+          git config user.email "actions@users.noreply.github.com"
+          if ! git diff --quiet -- state.json; then
+            git add state.json
+            git commit -m "chore: update state.json [skip ci]"
+            # Retry ringan jika ada push lain nyelip di antara run yang overlap.
+            for i in 1 2 3; do
+              git pull --rebase origin "$GITHUB_REF_NAME" && git push && break
+              sleep 5
+            done
+          else
+            echo "state.json tidak berubah, skip commit"
+          fi
