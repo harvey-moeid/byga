@@ -35,19 +35,42 @@ ke data asli:
 | `pnpm build` | type-check + build produksi ke `dist/` |
 | `pnpm preview` | serve hasil build untuk dicek |
 
-## Deploy (GitHub Pages)
+## Deploy (Cloudflare Pages)
 
-Deploy otomatis lewat `.github/workflows/dashboard.yml`.
+Dashboard di-deploy ke **Cloudflare Pages** saja. Tidak ada workflow GitHub
+Actions untuk dashboard (deploy ke GitHub Pages sudah dihapus).
 
-**Setup sekali saja:** Settings → Pages → **Source: GitHub Actions**.
-(Bukan lagi "Deploy from branch" seperti versi HTML lama.)
+**Opsi 1: hubungkan repo GitHub ke Pages.** Pengaturan build:
 
-Setelah itu, setiap push ke `main` yang mengubah `dashboard/**` akan
-build & deploy ulang. Workflow meng-inject `VITE_STATE_URL` yang menunjuk ke
-`state.json` di repo yang sama, jadi tidak perlu setting manual di browser.
+| Setting | Nilai |
+|---|---|
+| Root directory | `dashboard` |
+| Build command | `pnpm build` |
+| Build output directory | `dist` |
+| Build watch paths | `dashboard/*` |
 
-> Commit `state.json` dari bot (tiap 5 menit) **tidak** memicu build. Tidak perlu:
-> dashboard mengambil data saat runtime, bukan saat build.
+Environment variables (Settings → Environment variables):
+
+```
+NODE_VERSION=22
+VITE_STATE_URL=https://raw.githubusercontent.com/harvey-moeid/byga/main/state.json
+```
+
+`VITE_STATE_URL` dibaca saat **build**, jadi harus sudah terisi sebelum build
+pertama. Kalau kosong, dashboard menunjuk ke URL placeholder dan datanya kosong.
+
+**Opsi 2: direct upload.** Isi `dashboard/.env.local` (lihat di atas), lalu:
+
+```bash
+cd dashboard
+pnpm build
+npx wrangler pages deploy dist
+```
+
+> Bot meng-commit `state.json` tiap 5 menit dengan pesan `[skip ci]`. Dashboard
+> mengambil data saat runtime, bukan saat build, jadi commit itu tidak perlu
+> memicu build. Isi **Build watch paths** (`dashboard/*`) supaya perubahan di
+> luar folder dashboard tidak memicu build ulang di Cloudflare.
 
 Repo harus **public** agar `raw.githubusercontent.com` bisa dibaca tanpa autentikasi.
 
@@ -71,8 +94,8 @@ src/
 
 ## Keputusan desain
 
-- **`base: './'` di `vite.config.ts`.** Pages menyajikan project site di
-  `/<nama-repo>/`; path relatif membuat build jalan tanpa hardcode nama repo.
+- **`base: './'` di `vite.config.ts`.** Path relatif membuat build jalan di
+  root domain maupun subpath tanpa hardcode nama repo.
 - **Data lama tidak dibuang saat fetch gagal.** Hanya indikator koneksi yang
   berubah merah. Lebih berguna daripada layar kosong saat koneksi putus sesaat.
 - **Cache-buster `?t=` + `cache: 'no-store'`.** `raw.githubusercontent.com`

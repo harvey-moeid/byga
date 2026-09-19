@@ -3,9 +3,8 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  // base './' (relatif) -- GitHub Pages project site disajikan di
-  // /<nama-repo>/, bukan di root domain. Dengan path relatif, hasil build
-  // jalan di mana pun tanpa perlu meng-hardcode nama repo.
+  // base './' (relatif) supaya hasil build jalan di mana pun (root domain
+  // Cloudflare Pages maupun subpath) tanpa perlu meng-hardcode nama repo.
   base: './',
 
   // Tailwind v4 lewat plugin Vite: CSS di-generate saat build (hanya class yang
