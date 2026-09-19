@@ -16,17 +16,16 @@ pnpm install
 pnpm dev          # http://localhost:5173
 ```
 
-Secara default dashboard menunjuk ke URL placeholder. Dua cara mengarahkannya
-ke data asli:
+Sumber data hanya diatur lewat variabel `VITE_STATE_URL` (tidak ada pengaturan
+URL di UI). Tanpa variabel ini dashboard menunjuk ke URL placeholder. Buat
+`dashboard/.env.local`:
 
-1. Klik **Pengaturan sumber data** di halaman, isi raw URL, klik **Simpan**
-   (tersimpan di `localStorage` browser), atau
-2. Buat `dashboard/.env.local`:
-   ```
-   VITE_STATE_URL=https://raw.githubusercontent.com/<user>/<repo>/main/state.json
-   ```
-   Untuk tes dengan file lokal, boleh pakai path relatif: `VITE_STATE_URL=./state.json`
-   lalu taruh `state.json` di `dashboard/public/`.
+```
+VITE_STATE_URL=https://raw.githubusercontent.com/<user>/<repo>/main/state.json
+```
+
+Untuk tes dengan file lokal, boleh pakai path relatif: `VITE_STATE_URL=./state.json`
+lalu taruh `state.json` di `dashboard/public/`.
 
 | Script | Fungsi |
 |---|---|
@@ -80,15 +79,14 @@ Repo harus **public** agar `raw.githubusercontent.com` bisa dibaca tanpa autenti
 src/
 ├── main.tsx              entry point
 ├── App.tsx               susunan halaman; menghubungkan hooks dan komponen
-├── config.ts             konstanta (interval refresh, key storage, URL default)
+├── config.ts             konstanta (interval refresh, URL state.json dari VITE_STATE_URL)
 ├── types.ts              tipe data state.json (cerminan engine/scoring.py & state_store.py)
 ├── hooks/
-│   ├── useStateJson.ts   polling + status koneksi
-│   └── useSourceUrl.ts   URL sumber data + penyimpanan di localStorage
+│   └── useStateJson.ts   polling + status koneksi
 ├── lib/
 │   ├── format.ts         format angka & waktu
 │   └── stats.ts          hitung sinyal aktif, riwayat, win rate (fungsi murni)
-└── components/           StatCard, StatusIndicator, StatusBadge, SourceSettings,
+└── components/           StatCard, StatusIndicator, StatusBadge,
                           ActiveSignalsTable, HistoryTable
 ```
 

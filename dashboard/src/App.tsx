@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { HISTORY_LIMIT, REFRESH_MS } from './config';
-import { useSourceUrl } from './hooks/useSourceUrl';
+import { HISTORY_LIMIT, REFRESH_MS, STATE_URL } from './config';
 import { useStateJson } from './hooks/useStateJson';
 import { fmt, fmtTime } from './lib/format';
 import { computeStats } from './lib/stats';
@@ -39,12 +38,10 @@ function PriceChart({ price, lastRunAt }: { price: number | null | undefined; la
 }
 
 export default function App() {
-  const { url, saveUrl } = useSourceUrl();
-  const { data, status } = useStateJson(url, REFRESH_MS);
+  const { data, status } = useStateJson(STATE_URL, REFRESH_MS);
   const stats = useMemo(() => computeStats(data?.signals ?? []), [data]);
   const [page, setPage] = useState<Page>('home');
   const [selected, setSelected] = useState<Signal | null>(null);
-  const [draft, setDraft] = useState(url);
 
   const openSignal = (signal: Signal) => setSelected(signal);
   const allSignals = data?.signals ?? [];
@@ -61,7 +58,7 @@ export default function App() {
 
   const historyPage = <section className="section"><div className="section-title"><div><h2>Riwayat Trading</h2><p>Ringkasan sinyal yang sudah selesai</p></div></div><div className="history-summary"><div><small>Total Trade</small><b>{stats.closed.length}</b></div><div><small>Win Rate</small><b className="positive">{stats.winRateLabel.split(' ')[0]}</b></div><div><small>Cumulative R</small><b className={stats.cumulativeR >= 0 ? 'positive' : 'negative'}>{stats.cumulativeRLabel}</b></div></div>{stats.closed.slice(0, HISTORY_LIMIT).map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!stats.closed.length && <div className="empty">Belum ada riwayat trading.</div>}</section>;
 
-  const settingsPage = <section className="section"><div className="section-title"><div><h2>Pengaturan</h2><p>Kelola sumber data dashboard</p></div></div><div className="setting-card"><div className="setting-icon">◉</div><div><small>Sumber Data</small><strong>GitHub (state.json)</strong><p>Update otomatis via GitHub Actions</p></div></div><form className="source-form" onSubmit={e => { e.preventDefault(); saveUrl(draft); }}><label>URL state.json</label><input value={draft} onChange={e => setDraft(e.target.value)} placeholder="https://raw.githubusercontent.com/..."/><button type="submit">Simpan Sumber Data</button></form><div className="setting-card"><div className="setting-icon">◷</div><div><small>Interval Update</small><strong>1 menit</strong><p>Data diperbarui otomatis</p></div></div><div className="setting-card"><div className="setting-icon">✓</div><div><small>Status Koneksi</small><strong><StatusIndicator status={status} /></strong><p>GitHub Actions · Cloudflare Pages</p></div></div><div className="info-box"><b>Panduan Penggunaan</b><p>Bot membaca data dari state.json yang diperbarui otomatis oleh GitHub Actions. Gunakan kartu sinyal untuk melihat Entry, TP1, dan Stop Loss.</p></div></section>;
+  const settingsPage = <section className="section"><div className="section-title"><div><h2>Pengaturan</h2><p>Kelola sumber data dashboard</p></div></div><div className="setting-card"><div className="setting-icon">◉</div><div><small>Sumber Data</small><strong>GitHub (state.json)</strong><p>Update otomatis via GitHub Actions</p></div></div><div className="setting-card"><div className="setting-icon">◷</div><div><small>Interval Update</small><strong>1 menit</strong><p>Data diperbarui otomatis</p></div></div><div className="setting-card"><div className="setting-icon">✓</div><div><small>Status Koneksi</small><strong><StatusIndicator status={status} /></strong><p>GitHub Actions · Cloudflare Pages</p></div></div><div className="info-box"><b>Panduan Penggunaan</b><p>Bot membaca data dari state.json yang diperbarui otomatis oleh GitHub Actions. Gunakan kartu sinyal untuk melihat Entry, TP1, dan Stop Loss.</p></div></section>;
 
   return <main className="app-shell"><div className="app-container">{header}<div className="page-content">{page === 'home' && home}{page === 'signals' && signalsPage}{page === 'history' && historyPage}{page === 'settings' && settingsPage}</div><nav className="bottom-nav">{navItems.map(item => <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => setPage(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav></div>{selected && <div className="modal-backdrop" onClick={() => setSelected(null)}><div className="detail-sheet" onClick={e => e.stopPropagation()}><button className="close-button" onClick={() => setSelected(null)}>×</button><div className="detail-title"><Logo /><div><h2>BTC/USDT</h2><p>Detail Sinyal</p></div><DirectionBadge type={selected.type} /></div><PriceChart price={data?.last_price} lastRunAt={data?.last_run_at} /><div className="detail-rows"><div><span>Arah</span><b className="positive">{selected.type}</b></div><div><span>Entry</span><b>{fmt(selected.entryZoneStart)}</b></div><div><span>Take Profit 1 (TP1)</span><b>{fmt(selected.tp1)}</b></div><div><span>Take Profit 2 (TP2)</span><b>{fmt(selected.tp2)}</b></div><div><span>Stop Loss (SL)</span><b>{fmt(selected.stopLoss)}</b></div><div><span>Status</span><StatusPill active={selected.status === 'active'} /></div></div></div></div>}</main>;
 }
