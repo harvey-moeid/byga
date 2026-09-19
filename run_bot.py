@@ -8,8 +8,10 @@ proses sinkron:
      state.json): jalankan engine scoring -> simpan sinyal baru (active jika
      score>=70, watchlist jika score 50-69) -> kirim notifikasi Discord untuk
      sinyal baru.
-  3. Untuk semua sinyal 'active': cek harga terkini vs TP1/TP2/SL/expired
-     (1 jam)/invalidated -> update status -> kirim alert Discord jika kena.
+  3. Untuk semua sinyal 'active': cek harga terkini vs TP1/TP2/SL -> update
+     status -> kirim alert Discord jika kena. Sinyal terus dipantau tanpa
+     batas waktu sampai benar-benar kena TP atau SL (tidak ada lagi
+     expired/invalidated) -- lihat check_signal().
   4. Tulis balik state.json (di-commit oleh workflow jika berubah).
 
 State (pengganti D1+KV+Queue Cloudflare) disimpan di satu file JSON lokal,
@@ -34,7 +36,6 @@ from state_store import (
 
 SCORE_SEND_THRESHOLD = 70
 SCORE_WATCHLIST_THRESHOLD = 50
-EXPIRY_HOURS = 1
 TIMEFRAMES = ["5m", "15m"]
 WINDOW = 100
 
@@ -94,22 +95,24 @@ def process_new_candles(
 
 
 def check_signal(signal: dict, current_price: float) -> str:
-    """Return salah satu dari: tp_hit | sl_hit | expired | invalidated | active.
-    Urutan pengecekan: expired -> SL -> invalidated -> TP2 -> TP1 (TP2 dicek
-    lebih dulu karena harga bisa melompati TP1 langsung ke TP2 dalam satu
-    interval 5 menit; kalau TP1 dicek duluan, TP2 tidak akan pernah tercapai
-    -- sama seperti simulate_outcome() di backtest.py)."""
-    now_ms = datetime.now(timezone.utc).timestamp() * 1000
-    hours_since_signal = (now_ms - signal["candleOpenTime"]) / (1000 * 60 * 60)
+    """Return salah satu dari: tp1_hit | tp2_hit | sl_hit | active.
 
-    if hours_since_signal >= EXPIRY_HOURS:
-        return "expired"
+    Sinyal tidak lagi punya batas waktu (expired) atau ambang pembatalan
+    (invalidated) -- tiap sinyal terus dipantau tanpa henti tiap run sampai
+    harga benar-benar menyentuh TP atau SL, supaya setiap sinyal selalu
+    berakhir dengan hasil yang jelas (menang/kalah), bukan status "tidak
+    sempat kena apa-apa".
 
+    Urutan pengecekan: SL -> TP2 -> TP1 (TP2 dicek lebih dulu karena harga
+    bisa melompati TP1 langsung ke TP2 dalam satu interval 5 menit; kalau TP1
+    dicek duluan, TP2 tidak akan pernah tercapai -- sama seperti
+    simulate_outcome() di backtest.py). Kalau harga sudah lewat SL/TP jauh
+    sebelum sinyal ini sempat dicek pertama kali (mis. karena backlog candle
+    historis), SL/TP tetap dinilai terhadap harga saat ini -- bukan malah
+    ditandai expired begitu saja seperti perilaku lama."""
     if signal["type"] == "LONG":
         if current_price <= signal["stopLoss"]:
             return "sl_hit"
-        if current_price <= signal["entryZoneStart"] * 0.995:
-            return "invalidated"
         if current_price >= signal["tp2"]:
             return "tp2_hit"
         if current_price >= signal["tp1"]:
@@ -117,8 +120,6 @@ def check_signal(signal: dict, current_price: float) -> str:
     else:
         if current_price >= signal["stopLoss"]:
             return "sl_hit"
-        if current_price >= signal["entryZoneEnd"] * 1.005:
-            return "invalidated"
         if current_price <= signal["tp2"]:
             return "tp2_hit"
         if current_price <= signal["tp1"]:
@@ -131,7 +132,6 @@ ALERT_LABELS = {
     "sl_hit": "SL Hit",
     "tp1_hit": "TP1 Hit",
     "tp2_hit": "TP2 Hit",
-    "expired": "Expired",
 }
 
 
@@ -141,7 +141,7 @@ def track_active_signals(state: dict, current_price: float) -> None:
         return
 
     now_iso = datetime.now(timezone.utc).isoformat()
-    tp_hits = sl_hits = expired = invalidated = 0
+    tp_hits = sl_hits = 0
 
     for signal in active_signals:
         try:
@@ -153,26 +153,17 @@ def track_active_signals(state: dict, current_price: float) -> None:
         if result == "active":
             continue
 
-        status = "tp1_hit" if result == "tp1_hit" else (
-            "tp2_hit" if result == "tp2_hit" else result
-        )
-        update_signal_status(state, signal["id"], status, current_price, now_iso)
-
-        if result in ("sl_hit", "tp1_hit", "tp2_hit", "expired"):
-            discord_notify.send_alert(signal, ALERT_LABELS[result if result in ALERT_LABELS else "sl_hit"], current_price)
+        update_signal_status(state, signal["id"], result, current_price, now_iso)
+        discord_notify.send_alert(signal, ALERT_LABELS[result], current_price)
 
         if result in ("tp1_hit", "tp2_hit"):
             tp_hits += 1
         elif result == "sl_hit":
             sl_hits += 1
-        elif result == "expired":
-            expired += 1
-        elif result == "invalidated":
-            invalidated += 1
 
     print(
         f"Tracker: price={current_price} tp_hits={tp_hits} sl_hits={sl_hits} "
-        f"expired={expired} invalidated={invalidated} still_active={len(active_signals) - tp_hits - sl_hits - expired - invalidated}"
+        f"still_active={len(active_signals) - tp_hits - sl_hits}"
     )
 
 
@@ -210,7 +201,7 @@ def main() -> int:
     if candles_by_tf.get("5m"):
         process_new_candles(state, "5m", candles_by_tf["5m"], m15_trend, irga=irga_snapshot)
 
-    # 3) Cek TP/SL/expired untuk semua sinyal aktif.
+    # 3) Cek TP/SL untuk semua sinyal aktif.
     try:
         price_data = okx_client.fetch_mark_price_with_retry()
         state["last_price"] = price_data["markPrice"]

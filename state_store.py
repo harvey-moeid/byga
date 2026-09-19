@@ -14,7 +14,7 @@ STATE_PATH = os.environ.get("STATE_PATH", "state.json")
 DEFAULT_STATE = {
     "fetch_cursor": {"5m": 0, "15m": 0},
     "next_signal_id": 1,
-    "signals": [],        # semua signal (active/watchlist/tp*/sl/expired/invalidated)
+    "signals": [],        # semua signal (active/watchlist/tp1_hit/tp2_hit/sl_hit)
     "error_logs": [],     # beberapa error terakhir, untuk debugging (bukan pengganti log CI)
     "last_price": None,   # mark price terakhir, untuk ditampilkan di dashboard
     "last_run_at": None,  # timestamp run terakhir (ISO), untuk ditampilkan di dashboard
@@ -39,8 +39,19 @@ def load_state() -> dict:
 
 def save_state(state: dict) -> None:
     # Batasi ukuran array supaya state.json tidak membengkak selamanya.
+    # Sinyal berstatus 'active' TIDAK PERNAH dibuang di sini, apapun
+    # umurnya -- sejak tidak ada lagi expired, satu-satunya cara sinyal
+    # selesai adalah benar-benar kena TP/SL (lihat check_signal() di
+    # run_bot.py), jadi pruning tidak boleh diam-diam menghapusnya sebelum
+    # itu terjadi. Yang dipangkas hanya sinyal yang sudah selesai
+    # (tp*_hit/sl_hit) atau watchlist, paling lama dulu.
     if len(state["signals"]) > MAX_SIGNALS_KEPT:
-        state["signals"] = state["signals"][-MAX_SIGNALS_KEPT:]
+        active = [s for s in state["signals"] if s["status"] == "active"]
+        others = [s for s in state["signals"] if s["status"] != "active"]
+        keep_others = max(0, MAX_SIGNALS_KEPT - len(active))
+        trimmed = (others[-keep_others:] if keep_others else []) + active
+        trimmed.sort(key=lambda s: s["id"])
+        state["signals"] = trimmed
     if len(state["error_logs"]) > MAX_ERROR_LOGS:
         state["error_logs"] = state["error_logs"][-MAX_ERROR_LOGS:]
     for tf, candles in state.get("candles", {}).items():
