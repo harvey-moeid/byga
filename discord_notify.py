@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import requests
 
 DISCORD_WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL")       # sinyal baru
-DISCORD_ALERT_WEBHOOK = os.environ.get("DISCORD_ALERT_WEBHOOK")   # TP/SL/expired
+DISCORD_ALERT_WEBHOOK = os.environ.get("DISCORD_ALERT_WEBHOOK")   # TP1/TP2/SL
 
 
 def _now_iso() -> str:
@@ -70,12 +70,7 @@ def send_alert(signal: dict, alert_type: str, price: float) -> None:
     else:
         pnl = (signal["entryZoneEnd"] - price) / signal["entryZoneEnd"] * 100
 
-    if "TP" in alert_type:
-        color = 0x00FF00
-    elif alert_type == "Expired":
-        color = 0xFFA500
-    else:
-        color = 0xFF0000
+    color = 0x00FF00 if "TP" in alert_type else 0xFF0000
 
     embed = {
         "title": f"{alert_type} - {signal['type']} {signal['timeframe']}",

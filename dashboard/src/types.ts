@@ -6,14 +6,18 @@
 
 export type SignalType = 'LONG' | 'SHORT';
 
+/**
+ * Sinyal sekarang selalu dipantau sampai kena hasil nyata -- tidak ada lagi
+ * 'expired' atau 'invalidated'. Data lama di state.json bisa saja masih
+ * berisi status itu (dibuat sebelum perubahan ini); StatusBadge menangani
+ * status tak dikenal lewat fallback-nya sendiri, jadi aman ditampilkan.
+ */
 export type SignalStatus =
   | 'active'
   | 'watchlist'
   | 'tp1_hit'
   | 'tp2_hit'
-  | 'sl_hit'
-  | 'expired'
-  | 'invalidated';
+  | 'sl_hit';
 
 export interface Signal {
   id: number;
