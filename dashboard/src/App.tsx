@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { HISTORY_LIMIT, REFRESH_MS, STATE_URL } from './config';
+import { REFRESH_MS, STATE_URL } from './config';
 import { useStateJson } from './hooks/useStateJson';
 import { fmt, fmtTime } from './lib/format';
 import { computeStats } from './lib/stats';
@@ -13,6 +13,16 @@ const navItems = [
   { id: 'settings', label: 'Pengaturan', icon: '⚙' },
 ] as const;
 type Page = typeof navItems[number]['id'];
+const PAGE_SIZE = 6;
+
+function Pager({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
+  if (totalPages <= 1) return null;
+  return <div className="pager">
+    <button disabled={page <= 1} onClick={() => onChange(page - 1)} aria-label="Halaman sebelumnya">‹</button>
+    <span>Halaman {page} dari {totalPages}</span>
+    <button disabled={page >= totalPages} onClick={() => onChange(page + 1)} aria-label="Halaman berikutnya">›</button>
+  </div>;
+}
 
 function Logo() { return <span className="brand-mark">△</span>; }
 function DirectionBadge({ type }: { type: Signal['type'] }) { return <span className={`direction ${type.toLowerCase()}`}>{type}</span>; }
@@ -44,11 +54,20 @@ export default function App() {
   const [selected, setSelected] = useState<Signal | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [signalFilter, setSignalFilter] = useState<'all' | 'active' | 'closed'>('all');
+  const [signalsPageNum, setSignalsPageNum] = useState(1);
+  const [historyPageNum, setHistoryPageNum] = useState(1);
 
   const openSignal = (signal: Signal) => setSelected(signal);
   const goTo = (p: Page) => { setPage(p); setMenuOpen(false); };
+  const setFilter = (f: 'all' | 'active' | 'closed') => { setSignalFilter(f); setSignalsPageNum(1); };
   const allSignals = data?.signals ?? [];
   const filteredSignals = signalFilter === 'all' ? allSignals : allSignals.filter(s => (s.status === 'active') === (signalFilter === 'active'));
+  const totalSignalsPages = Math.max(1, Math.ceil(filteredSignals.length / PAGE_SIZE));
+  const currentSignalsPage = Math.min(signalsPageNum, totalSignalsPages);
+  const pagedSignals = filteredSignals.slice((currentSignalsPage - 1) * PAGE_SIZE, currentSignalsPage * PAGE_SIZE);
+  const totalHistoryPages = Math.max(1, Math.ceil(stats.closed.length / PAGE_SIZE));
+  const currentHistoryPage = Math.min(historyPageNum, totalHistoryPages);
+  const pagedHistory = stats.closed.slice((currentHistoryPage - 1) * PAGE_SIZE, currentHistoryPage * PAGE_SIZE);
 
   const header = <header className="app-header"><div className="brand"><button className="icon-button" aria-label="Menu" onClick={() => setMenuOpen(true)}>☰</button><Logo /><div><h1>BYGA Signal</h1><p>Trading Bot Dashboard</p></div></div><div className="bot-state"><span /> Bot Aktif</div></header>;
 
@@ -60,9 +79,9 @@ export default function App() {
     <section className="section"><div className="section-title"><div><h2>Sinyal Terbaru</h2><p>Peluang trading yang sedang dipantau</p></div><button onClick={() => setPage('signals')}>Lihat Semua ›</button></div>{allSignals.slice(0, 3).map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!allSignals.length && <div className="empty">Belum ada data sinyal.</div>}</section>
   </>;
 
-  const signalsPage = <section className="section"><div className="section-title"><div><h2>Daftar Sinyal</h2><p>Semua peluang dari bot</p></div><span className="filter-chip">☷</span></div><div className="tabs"><button className={signalFilter === 'all' ? 'selected' : ''} onClick={() => setSignalFilter('all')}>Semua</button><button className={signalFilter === 'active' ? 'selected' : ''} onClick={() => setSignalFilter('active')}>Aktif</button><button className={signalFilter === 'closed' ? 'selected' : ''} onClick={() => setSignalFilter('closed')}>Close</button></div>{filteredSignals.map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!filteredSignals.length && <div className="empty">Belum ada sinyal.</div>}</section>;
+  const signalsPage = <section className="section"><div className="section-title"><div><h2>Daftar Sinyal</h2><p>Semua peluang dari bot</p></div><span className="filter-chip">☷</span></div><div className="tabs"><button className={signalFilter === 'all' ? 'selected' : ''} onClick={() => setFilter('all')}>Semua</button><button className={signalFilter === 'active' ? 'selected' : ''} onClick={() => setFilter('active')}>Aktif</button><button className={signalFilter === 'closed' ? 'selected' : ''} onClick={() => setFilter('closed')}>Close</button></div>{pagedSignals.map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!filteredSignals.length && <div className="empty">Belum ada sinyal.</div>}<Pager page={currentSignalsPage} totalPages={totalSignalsPages} onChange={setSignalsPageNum} /></section>;
 
-  const historyPage = <section className="section"><div className="section-title"><div><h2>Riwayat Trading</h2><p>Ringkasan sinyal yang sudah selesai</p></div></div><div className="history-summary"><div><small>Total Trade</small><b>{stats.closed.length}</b></div><div><small>Win Rate</small><b className="positive">{stats.winRateLabel.split(' ')[0]}</b></div><div><small>Cumulative R</small><b className={stats.cumulativeR >= 0 ? 'positive' : 'negative'}>{stats.cumulativeRLabel}</b></div></div>{stats.closed.slice(0, HISTORY_LIMIT).map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!stats.closed.length && <div className="empty">Belum ada riwayat trading.</div>}</section>;
+  const historyPage = <section className="section"><div className="section-title"><div><h2>Riwayat Trading</h2><p>Ringkasan sinyal yang sudah selesai</p></div></div><div className="history-summary"><div><small>Total Trade</small><b>{stats.closed.length}</b></div><div><small>Win Rate</small><b className="positive">{stats.winRateLabel.split(' ')[0]}</b></div><div><small>Cumulative R</small><b className={stats.cumulativeR >= 0 ? 'positive' : 'negative'}>{stats.cumulativeRLabel}</b></div></div>{pagedHistory.map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!stats.closed.length && <div className="empty">Belum ada riwayat trading.</div>}<Pager page={currentHistoryPage} totalPages={totalHistoryPages} onChange={setHistoryPageNum} /></section>;
 
   const settingsPage = <section className="section"><div className="section-title"><div><h2>Pengaturan</h2><p>Kelola sumber data dashboard</p></div></div><div className="setting-card"><div className="setting-icon">◉</div><div><small>Sumber Data</small><strong>GitHub (state.json)</strong><p>Update otomatis via GitHub Actions</p></div></div><div className="setting-card"><div className="setting-icon">◷</div><div><small>Interval Update</small><strong>1 menit</strong><p>Data diperbarui otomatis</p></div></div><div className="setting-card"><div className="setting-icon">✓</div><div><small>Status Koneksi</small><strong><StatusIndicator status={status} /></strong><p>GitHub Actions · Cloudflare Pages</p></div></div><div className="info-box"><b>Panduan Penggunaan</b><p>Bot membaca data dari state.json yang diperbarui otomatis oleh GitHub Actions. Gunakan kartu sinyal untuk melihat Entry, TP1, dan Stop Loss.</p></div></section>;
 
