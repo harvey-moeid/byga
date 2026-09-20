@@ -15,3 +15,19 @@ export const HISTORY_LIMIT = 20;
 export const STATE_URL =
   import.meta.env.VITE_STATE_URL ??
   'https://raw.githubusercontent.com/USER/REPO/main/state.json';
+
+/**
+ * Endpoint Pages Function untuk status & menjalankan bot (lihat
+ * functions/api/bot.ts dan docs/RUN_BOT_BUTTON.md). Default '/api/bot' berlaku
+ * karena dashboard dilayani dari root domain Cloudflare Pages.
+ */
+export const BOT_API_URL: string = import.meta.env.VITE_BOT_API_URL ?? '/api/bot';
+
+/** Polling status bot saat idle -- pelan, cukup untuk mendeteksi run cron. */
+export const BOT_POLL_IDLE_MS = 20_000;
+
+/** Polling saat bot berjalan atau baru diminta jalan -- cepat, supaya tombol segera aktif lagi. */
+export const BOT_POLL_ACTIVE_MS = 5_000;
+
+/** Batas menunggu run baru muncul di GitHub setelah tombol ditekan (kunci "starting"). */
+export const BOT_START_TIMEOUT_MS = 60_000;

@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.local
 public/state.json
+# Secret lokal untuk `wrangler pages dev` (mis. GH_DISPATCH_TOKEN) -- jangan di-commit.
+.dev.vars

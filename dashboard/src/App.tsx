@@ -5,6 +5,7 @@ import { fmt, fmtTime } from './lib/format';
 import { computeStats } from './lib/stats';
 import type { Candle, Signal } from './types';
 import StatusIndicator from './components/StatusIndicator';
+import BotRunButton from './components/BotRunButton';
 
 const navItems = [
   { id: 'home', label: 'Beranda', icon: '⌂' },
@@ -100,6 +101,7 @@ export default function App() {
 
   const home = <>
     <PriceChart price={data?.last_price} lastRunAt={data?.last_run_at} candles={candleData} />
+    <BotRunButton />
     <div className="stats-grid"><div className="metric"><span>ϟ</span><small>Sinyal Aktif</small><strong>{stats.active.length}</strong><em>{stats.activeLong}L / {stats.activeShort}S</em></div><div className="metric"><span>◉</span><small>Win Rate</small><strong>{stats.winRateLabel.split(' ')[0]}</strong><em>{stats.wins}W / {stats.losses}L</em></div><div className="metric"><span>◈</span><small>Cumulative R</small><strong className={stats.cumulativeR >= 0 ? 'positive' : 'negative'}>{stats.cumulativeRLabel}</strong><em>({stats.closed.length} closed)</em></div></div>
     <section className="section"><div className="section-title"><div><h2>Sinyal Terbaru</h2><p>Peluang trading yang sedang dipantau</p></div><button onClick={() => setPage('signals')}>Lihat Semua ›</button></div>{allSignals.slice(0, 3).map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!allSignals.length && <div className="empty">Belum ada data sinyal.</div>}</section>
   </>;
