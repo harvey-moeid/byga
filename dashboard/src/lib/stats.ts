@@ -5,7 +5,7 @@ export interface Stats {
   /** Breakdown arah sinyal aktif -- dipakai alih-alih hardcode 'LONG'. */
   activeLong: number;
   activeShort: number;
-  /** Sinyal yang sudah selesai (bukan active/watchlist), terbaru dulu. */
+  /** Sinyal yang sudah selesai (kena TP1/TP2/SL), terbaru dulu. */
   closed: Signal[];
   wins: number;
   losses: number;
@@ -18,11 +18,20 @@ export interface Stats {
 }
 
 /**
+ * Hasil trade yang sah. Sengaja whitelist, bukan "semua status selain
+ * active/watchlist": sinyal lama di state.json bisa masih berstatus
+ * 'expired' / 'invalidated' (dibuat sebelum bot berhenti memakai status itu),
+ * dan status tak dikenal lain di masa depan, dan keduanya bukan hasil trade
+ * yang sebenarnya -- jangan sampai ikut mengotori total closed, riwayat,
+ * maupun cumulative R.
+ */
+const RESOLVED_STATUSES: ReadonlyArray<string> = ['tp1_hit', 'tp2_hit', 'sl_hit'];
+
+/**
  * Semua turunan data dihitung di sini sebagai fungsi murni (tanpa React),
  * supaya gampang dites dan tidak tercampur dengan urusan tampilan.
  *
- * Win rate hanya menghitung TP vs SL. Expired/invalidated sengaja diabaikan
- * karena bukan hasil trade yang sebenarnya.
+ * Win rate hanya menghitung TP vs SL.
  *
  * cumulativeR memakai rumus yang sama persis dengan build_performance_report()
  * di backtest.py -- risk = jarak entry ke SL (1R), PnL dinyatakan dalam
@@ -35,7 +44,7 @@ export function computeStats(signals: Signal[]): Stats {
   const activeShort = active.filter((s) => s.type === 'SHORT').length;
 
   const closed = signals
-    .filter((s) => s.status !== 'active' && s.status !== 'watchlist')
+    .filter((s) => RESOLVED_STATUSES.includes(s.status))
     .sort(
       (a, b) =>
         new Date(b.closedAt ?? 0).getTime() - new Date(a.closedAt ?? 0).getTime(),

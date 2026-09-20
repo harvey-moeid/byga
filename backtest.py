@@ -15,7 +15,9 @@ Usage:
 Fetch candle historis 5m & 15m BTC-USDT-SWAP dari OKX, jalankan lewat
 scoring logic PERSIS SAMA dengan yang dipakai run_bot.py (import dari
 package `engine` yang sama -- bukan reimplementasi terpisah), simulasikan
-outcome TP/SL/expiry, lalu tulis laporan JSON.
+outcome TP/SL, lalu tulis laporan JSON. Sinyal tidak punya batas waktu
+(expired) maupun ambang pembatalan (invalidated) -- sama seperti
+check_signal() di run_bot.py.
 """
 import json
 import os
@@ -29,7 +31,6 @@ import okx_client
 WINDOW = 100
 SCORE_SEND_THRESHOLD = 70
 SCORE_WATCHLIST_THRESHOLD = 50
-EXPIRY_MS = 60 * 60 * 1000  # 1 jam, sama seperti tracker
 
 
 def _iso(ms: int) -> str:
@@ -88,25 +89,30 @@ def generate_signals(primary_candles, timeframe, m15_candles, irga_hist=None):
 
 
 def simulate_outcome(candles, signal_index, signal):
-    """Scan forward candle-by-candle, prioritas: expired -> SL -> invalidated
-    -> TP1 -> TP2 (identik dengan checkSignal tracker asli, tapi dicek per
-    high/low candle historis, bukan poll harga tiap 5 menit)."""
-    entry_time = candles[signal_index]["closeTime"]
+    """Scan forward candle-by-candle, prioritas: SL -> TP2 -> TP1 (identik
+    dengan check_signal() di run_bot.py, tapi dicek per high/low candle
+    historis, bukan poll harga tiap 5 menit).
 
+    Keputusan desain: tidak ada lagi cabang expired (batas 1 jam) maupun
+    invalidated (harga menembus 0.5% di luar entry zone). Live bot memantau
+    sinyal tanpa batas waktu sampai kena TP/SL, jadi backtest harus
+    mengukur hal yang sama -- kalau tidak, win rate backtest tidak bisa
+    dibandingkan dengan hasil live.
+
+    Kalau dalam seluruh data historis harga tidak pernah menyentuh SL/TP,
+    sinyal dikembalikan sebagai 'active' (masih terbuka di akhir window)
+    dan tidak ikut dihitung di win rate maupun cumulative R.
+
+    Kalau SL dan TP tersentuh dalam candle yang sama, SL dimenangkan
+    (asumsi konservatif -- urutan intra-candle tidak diketahui)."""
     for i in range(signal_index + 1, len(candles)):
         candle = candles[i]
-
-        if candle["closeTime"] - entry_time >= EXPIRY_MS:
-            return {"status": "expired", "closedPrice": float(candle["close"]), "closedAt": _iso(candle["closeTime"])}
-
         high = float(candle["high"])
         low = float(candle["low"])
 
         if signal["type"] == "LONG":
             if low <= signal["stopLoss"]:
                 return {"status": "sl_hit", "closedPrice": signal["stopLoss"], "closedAt": _iso(candle["closeTime"])}
-            if low <= signal["entryZoneStart"] * 0.995:
-                return {"status": "invalidated", "closedPrice": low, "closedAt": _iso(candle["closeTime"])}
             if high >= signal["tp2"]:
                 return {"status": "tp2_hit", "closedPrice": signal["tp2"], "closedAt": _iso(candle["closeTime"])}
             if high >= signal["tp1"]:
@@ -114,8 +120,6 @@ def simulate_outcome(candles, signal_index, signal):
         else:
             if high >= signal["stopLoss"]:
                 return {"status": "sl_hit", "closedPrice": signal["stopLoss"], "closedAt": _iso(candle["closeTime"])}
-            if high >= signal["entryZoneEnd"] * 1.005:
-                return {"status": "invalidated", "closedPrice": high, "closedAt": _iso(candle["closeTime"])}
             if low <= signal["tp2"]:
                 return {"status": "tp2_hit", "closedPrice": signal["tp2"], "closedAt": _iso(candle["closeTime"])}
             if low <= signal["tp1"]:
