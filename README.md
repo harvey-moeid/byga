@@ -13,7 +13,7 @@ proses:
 1. **Fetch** candle 5m & 15m BTC-USDT-SWAP dari OKX (public API, tanpa API key).
 2. **Engine**: skor tiap candle closed yang belum pernah diproses — pattern
    price action (engulfing, pinbar, inside bar, BOS, CHoCH), volume (RVOL,
-   spike), S/R proximity, alignment trend M15. Score â‰¥70 = sinyal aktif +
+   spike), S/R proximity, alignment trend M15. Score ≥70 = sinyal aktif +
    notifikasi Discord baru; score 50-69 = watchlist (dicatat, tanpa notif).
 3. **Tracker**: cek semua sinyal aktif terhadap mark price terkini —
    TP1/TP2/SL/expired (1 jam)/invalidated — kirim alert Discord saat kena.
@@ -57,8 +57,8 @@ memblokir akun media sosial exchange asing, bukan endpoint API publiknya).
    `GITHUB_TOKEN` bisa commit `state.json` balik ke repo).
 
 4. **Perhatikan backfill di run pertama**: karena `fetch_cursor` mulai dari 0,
-   run pertama akan memproses ~100 candle historis per timeframe (â‰ˆ8 jam
-   data 5m + â‰ˆ25 jam data 15m) sebagai "baru", yang bisa menghasilkan beberapa
+   run pertama akan memproses ~100 candle historis per timeframe (≈8 jam
+   data 5m + ≈25 jam data 15m) sebagai "baru", yang bisa menghasilkan beberapa
    sinyal sekaligus. Kalau tidak mau kena spam Discord di run pertama,
    kosongkan dulu isi secret webhook, biarkan satu run jalan (cursor akan
    maju), baru isi secret webhook-nya setelah itu.
