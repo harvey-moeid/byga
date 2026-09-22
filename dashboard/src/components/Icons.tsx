@@ -1,8 +1,8 @@
-import type { SVGProps } from 'react';
+import type { ReactNode, SVGProps } from 'react';
 
 type IconName = 'menu' | 'home' | 'chart' | 'signals' | 'history' | 'settings' | 'filter' | 'database' | 'clock' | 'plug' | 'target' | 'trend' | 'close' | 'chevron-right' | 'chevron-left';
 
-const paths: Record<IconName, React.ReactNode> = {
+const paths: Record<IconName, ReactNode> = {
   menu: <><path d="M4 6h16M4 12h16M4 18h16" /></>,
   home: <><path d="m3 10 9-7 9 7" /><path d="M5 9.5V21h14V9.5" /><path d="M9 21v-6h6v6" /></>,
   chart: <><path d="M4 19V5M4 19h16" /><path d="m7 15 4-5 3 3 5-7" /></>,
