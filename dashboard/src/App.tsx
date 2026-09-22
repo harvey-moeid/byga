@@ -7,13 +7,14 @@ import type { Candle, Signal } from './types';
 import StatusIndicator from './components/StatusIndicator';
 import BotRunButton from './components/BotRunButton';
 import FullChart from './components/FullChart';
+import Icon, { BrandMark } from './components/Icons';
 
 const navItems = [
-  { id: 'home', label: 'Beranda', icon: '🏠' },
-  { id: 'chart', label: 'Chart', icon: '📈' },
-  { id: 'signals', label: 'Sinyal', icon: '📊' },
-  { id: 'history', label: 'Riwayat', icon: '📜' },
-  { id: 'settings', label: 'Pengaturan', icon: '⚙️' },
+  { id: 'home', label: 'Beranda', icon: 'home' },
+  { id: 'chart', label: 'Chart', icon: 'chart' },
+  { id: 'signals', label: 'Sinyal', icon: 'signals' },
+  { id: 'history', label: 'Riwayat', icon: 'history' },
+  { id: 'settings', label: 'Pengaturan', icon: 'settings' },
 ] as const;
 type Page = typeof navItems[number]['id'];
 const PAGE_SIZE = 6;
@@ -21,27 +22,27 @@ const PAGE_SIZE = 6;
 function Pager({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
   if (totalPages <= 1) return null;
   return <div className="pager">
-    <button disabled={page <= 1} onClick={() => onChange(page - 1)} aria-label="Halaman sebelumnya">{'‹'}</button>
+    <button disabled={page <= 1} onClick={() => onChange(page - 1)} aria-label="Halaman sebelumnya"><Icon name="chevron-left" size={16} /></button>
     <span>Halaman {page} dari {totalPages}</span>
-    <button disabled={page >= totalPages} onClick={() => onChange(page + 1)} aria-label="Halaman berikutnya">{'›'}</button>
+    <button disabled={page >= totalPages} onClick={() => onChange(page + 1)} aria-label="Halaman berikutnya"><Icon name="chevron-right" size={16} /></button>
   </div>;
 }
 
-function Logo() { return <span className="brand-mark">{'₿'}</span>; }
+function Logo() { return <span className="brand-mark"><BrandMark size={36} /></span>; }
 function DirectionBadge({ type }: { type: Signal['type'] }) { return <span className={`direction ${type.toLowerCase()}`}>{type}</span>; }
-function StatusPill({ active }: { active: boolean }) { return <span className={`status-pill ${active ? 'active' : 'closed'}`}>{active ? '🟢 Masih Aktif' : '⚪ Sudah Close'}</span>; }
+function StatusPill({ active }: { active: boolean }) { return <span className={`status-pill ${active ? 'active' : 'closed'}`}><span className="status-dot" />{active ? 'Masih Aktif' : 'Sudah Close'}</span>; }
 
 function SignalCard({ signal, onOpen }: { signal: Signal; onOpen: (s: Signal) => void }) {
   const active = signal.status === 'active';
   return <button className="signal-card" onClick={() => onOpen(signal)}>
-    <div className="signal-top"><DirectionBadge type={signal.type} /><div><strong>BTC/USDT</strong><span className="muted">{fmtTime(signal.createdAt)}</span></div><span className="muted">{active ? 'Aktif' : 'Selesai'} {'›'}</span></div>
+    <div className="signal-top"><DirectionBadge type={signal.type} /><div><strong>BTC/USDT</strong><span className="muted">{fmtTime(signal.createdAt)}</span></div><span className="muted">{active ? 'Aktif' : 'Selesai'} <Icon name="chevron-right" size={12} /></span></div>
     <div className="signal-price">{fmt((signal.entryZoneStart + signal.entryZoneEnd) / 2)}</div>
     <div className="signal-levels"><div><small>Entry</small><b>{fmt(signal.entryZoneStart)}</b></div><div><small>TP1</small><b>{fmt(signal.tp1)}</b></div><div><small>SL</small><b>{fmt(signal.stopLoss)}</b></div></div>
     <StatusPill active={active} />
   </button>;
 }
 
-const CANDLES_SHOWN = 48; // ~12 jam candle 15m
+const CANDLES_SHOWN = 48;
 
 function Candlesticks({ candles }: { candles: Candle[] }) {
   const W = 258, H = 125, PAD = 6;
@@ -97,24 +98,24 @@ export default function App() {
   const currentHistoryPage = Math.min(historyPageNum, totalHistoryPages);
   const pagedHistory = stats.closed.slice((currentHistoryPage - 1) * PAGE_SIZE, currentHistoryPage * PAGE_SIZE);
 
-  const header = <header className="app-header"><div className="brand"><button className="icon-button" aria-label="Menu" onClick={() => setMenuOpen(true)}>{'☰'}</button><Logo /><div><h1>BYGA Signal</h1><p>Trading Bot Dashboard</p></div></div><div className="bot-state"><span /> Bot Aktif</div></header>;
+  const header = <header className="app-header"><div className="brand"><button className="icon-button" aria-label="Menu" onClick={() => setMenuOpen(true)}><Icon name="menu" size={17} /></button><Logo /><div><h1>BYGA Signal</h1><p>Trading Bot Dashboard</p></div></div><div className="bot-state"><span /> Bot Aktif</div></header>;
 
-  const menu = menuOpen && <div className="modal-backdrop menu-backdrop" onClick={() => setMenuOpen(false)}><div className="menu-drawer" onClick={e => e.stopPropagation()}><div className="menu-drawer-head"><div className="brand"><Logo /><div><h1>BYGA Signal</h1><p>Trading Bot Dashboard</p></div></div><button className="close-button" onClick={() => setMenuOpen(false)}>{'×'}</button></div><nav className="menu-drawer-nav">{navItems.map(item => <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => goTo(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav></div></div>;
+  const menu = menuOpen && <div className="modal-backdrop menu-backdrop" onClick={() => setMenuOpen(false)}><div className="menu-drawer" onClick={e => e.stopPropagation()}><div className="menu-drawer-head"><div className="brand"><Logo /><div><h1>BYGA Signal</h1><p>Trading Bot Dashboard</p></div></div><button className="close-button" aria-label="Tutup menu" onClick={() => setMenuOpen(false)}><Icon name="close" size={17} /></button></div><nav className="menu-drawer-nav">{navItems.map(item => <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => goTo(item.id)}><Icon name={item.icon} size={18} /><span>{item.label}</span></button>)}</nav></div></div>;
 
   const home = <>
     <PriceChart price={data?.last_price} lastRunAt={data?.last_run_at} candles={candleData} />
     <BotRunButton />
-    <div className="stats-grid"><div className="metric"><span>{'📊'}</span><small>Sinyal Aktif</small><strong>{stats.active.length}</strong><em>{stats.activeLong}L / {stats.activeShort}S</em></div><div className="metric"><span>{'🎯'}</span><small>Win Rate</small><strong>{stats.winRateLabel.split(' ')[0]}</strong><em>{stats.wins}W / {stats.losses}L</em></div><div className="metric"><span>{'📈'}</span><small>Cumulative R</small><strong className={stats.cumulativeR >= 0 ? 'positive' : 'negative'}>{stats.cumulativeRLabel}</strong><em>({stats.closed.length} closed)</em></div></div>
-    <section className="section"><div className="section-title"><div><h2>Sinyal Terbaru</h2><p>Peluang trading yang sedang dipantau</p></div><button onClick={() => setPage('signals')}>Lihat Semua {'›'}</button></div>{allSignals.slice(0, 3).map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!allSignals.length && <div className="empty">Belum ada data sinyal.</div>}</section>
+    <div className="stats-grid"><div className="metric"><span><Icon name="signals" size={19} /></span><small>Sinyal Aktif</small><strong>{stats.active.length}</strong><em>{stats.activeLong}L / {stats.activeShort}S</em></div><div className="metric"><span><Icon name="target" size={19} /></span><small>Win Rate</small><strong>{stats.winRateLabel.split(' ')[0]}</strong><em>{stats.wins}W / {stats.losses}L</em></div><div className="metric"><span><Icon name="trend" size={19} /></span><small>Cumulative R</small><strong className={stats.cumulativeR >= 0 ? 'positive' : 'negative'}>{stats.cumulativeRLabel}</strong><em>({stats.closed.length} closed)</em></div></div>
+    <section className="section"><div className="section-title"><div><h2>Sinyal Terbaru</h2><p>Peluang trading yang sedang dipantau</p></div><button onClick={() => setPage('signals')}>Lihat Semua <Icon name="chevron-right" size={12} /></button></div>{allSignals.slice(0, 3).map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!allSignals.length && <div className="empty">Belum ada data sinyal.</div>}</section>
   </>;
 
   const chartPage = <FullChart candles={candleData} price={data?.last_price} lastRunAt={data?.last_run_at} />;
 
-  const signalsPage = <section className="section"><div className="section-title"><div><h2>Daftar Sinyal</h2><p>Semua peluang dari bot</p></div><span className="filter-chip">{'🔽'}</span></div><div className="tabs"><button className={signalFilter === 'all' ? 'selected' : ''} onClick={() => setFilter('all')}>Semua</button><button className={signalFilter === 'active' ? 'selected' : ''} onClick={() => setFilter('active')}>Aktif</button><button className={signalFilter === 'closed' ? 'selected' : ''} onClick={() => setFilter('closed')}>Close</button></div>{pagedSignals.map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!filteredSignals.length && <div className="empty">Belum ada sinyal.</div>}<Pager page={currentSignalsPage} totalPages={totalSignalsPages} onChange={setSignalsPageNum} /></section>;
+  const signalsPage = <section className="section"><div className="section-title"><div><h2>Daftar Sinyal</h2><p>Semua peluang dari bot</p></div><span className="filter-chip"><Icon name="filter" size={16} /></span></div><div className="tabs"><button className={signalFilter === 'all' ? 'selected' : ''} onClick={() => setFilter('all')}>Semua</button><button className={signalFilter === 'active' ? 'selected' : ''} onClick={() => setFilter('active')}>Aktif</button><button className={signalFilter === 'closed' ? 'selected' : ''} onClick={() => setFilter('closed')}>Close</button></div>{pagedSignals.map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!filteredSignals.length && <div className="empty">Belum ada sinyal.</div>}<Pager page={currentSignalsPage} totalPages={totalSignalsPages} onChange={setSignalsPageNum} /></section>;
 
   const historyPage = <section className="section"><div className="section-title"><div><h2>Riwayat Trading</h2><p>Ringkasan sinyal yang sudah selesai</p></div></div><div className="history-summary"><div><small>Total Trade</small><b>{stats.closed.length}</b></div><div><small>Win Rate</small><b className="positive">{stats.winRateLabel.split(' ')[0]}</b></div><div><small>Cumulative R</small><b className={stats.cumulativeR >= 0 ? 'positive' : 'negative'}>{stats.cumulativeRLabel}</b></div></div>{pagedHistory.map(s => <SignalCard key={s.id} signal={s} onOpen={openSignal} />)}{!stats.closed.length && <div className="empty">Belum ada riwayat trading.</div>}<Pager page={currentHistoryPage} totalPages={totalHistoryPages} onChange={setHistoryPageNum} /></section>;
 
-  const settingsPage = <section className="section"><div className="section-title"><div><h2>Pengaturan</h2><p>Kelola sumber data dashboard</p></div></div><div className="setting-card"><div className="setting-icon">{'🗄️'}</div><div><small>Sumber Data</small><strong>GitHub (state.json)</strong><p>Update otomatis via GitHub Actions</p></div></div><div className="setting-card"><div className="setting-icon">{'⏱️'}</div><div><small>Interval Update</small><strong>1 menit</strong><p>Data diperbarui otomatis</p></div></div><div className="setting-card"><div className="setting-icon">{'🔌'}</div><div><small>Status Koneksi</small><strong><StatusIndicator status={status} /></strong><p>GitHub Actions {'·'} Cloudflare Pages</p></div></div><div className="info-box"><b>Panduan Penggunaan</b><p>Bot membaca data dari state.json yang diperbarui otomatis oleh GitHub Actions. Gunakan kartu sinyal untuk melihat Entry, TP1, dan Stop Loss.</p></div></section>;
+  const settingsPage = <section className="section"><div className="section-title"><div><h2>Pengaturan</h2><p>Kelola sumber data dashboard</p></div></div><div className="setting-card"><div className="setting-icon"><Icon name="database" size={19} /></div><div><small>Sumber Data</small><strong>GitHub (state.json)</strong><p>Update otomatis via GitHub Actions</p></div></div><div className="setting-card"><div className="setting-icon"><Icon name="clock" size={19} /></div><div><small>Interval Update</small><strong>1 menit</strong><p>Data diperbarui otomatis</p></div></div><div className="setting-card"><div className="setting-icon"><Icon name="plug" size={19} /></div><div><small>Status Koneksi</small><strong><StatusIndicator status={status} /></strong><p>GitHub Actions · Cloudflare Pages</p></div></div><div className="info-box"><b>Panduan Penggunaan</b><p>Bot membaca data dari state.json yang diperbarui otomatis oleh GitHub Actions. Gunakan kartu sinyal untuk melihat Entry, TP1, dan Stop Loss.</p></div></section>;
 
-  return <main className="app-shell"><div className="app-container">{header}<div className="page-content">{page === 'home' && home}{page === 'chart' && chartPage}{page === 'signals' && signalsPage}{page === 'history' && historyPage}{page === 'settings' && settingsPage}</div><nav className="bottom-nav">{navItems.map(item => <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => setPage(item.id)}><span>{item.icon}</span>{item.label}</button>)}</nav></div>{menu}{selected && <div className="modal-backdrop" onClick={() => setSelected(null)}><div className="detail-sheet" onClick={e => e.stopPropagation()}><button className="close-button" onClick={() => setSelected(null)}>{'×'}</button><div className="detail-title"><Logo /><div><h2>BTC/USDT</h2><p>Detail Sinyal</p></div><DirectionBadge type={selected.type} /></div><PriceChart price={data?.last_price} lastRunAt={data?.last_run_at} candles={candleData} /><div className="detail-rows"><div><span>Arah</span><b className="positive">{selected.type}</b></div><div><span>Entry</span><b>{fmt(selected.entryZoneStart)}</b></div><div><span>Take Profit 1 (TP1)</span><b>{fmt(selected.tp1)}</b></div><div><span>Take Profit 2 (TP2)</span><b>{fmt(selected.tp2)}</b></div><div><span>Stop Loss (SL)</span><b>{fmt(selected.stopLoss)}</b></div><div><span>Status</span><StatusPill active={selected.status === 'active'} /></div></div></div></div>}</main>;
+  return <main className="app-shell"><div className="app-container">{header}<div className="page-content">{page === 'home' && home}{page === 'chart' && chartPage}{page === 'signals' && signalsPage}{page === 'history' && historyPage}{page === 'settings' && settingsPage}</div><nav className="bottom-nav">{navItems.map(item => <button key={item.id} className={page === item.id ? 'active' : ''} onClick={() => setPage(item.id)}><Icon name={item.icon} size={20} /><span>{item.label}</span></button>)}</nav></div>{menu}{selected && <div className="modal-backdrop" onClick={() => setSelected(null)}><div className="detail-sheet" onClick={e => e.stopPropagation()}><button className="close-button" aria-label="Tutup" onClick={() => setSelected(null)}><Icon name="close" size={17} /></button><div className="detail-title"><Logo /><div><h2>BTC/USDT</h2><p>Detail Sinyal</p></div><DirectionBadge type={selected.type} /></div><PriceChart price={data?.last_price} lastRunAt={data?.last_run_at} candles={candleData} /><div className="detail-rows"><div><span>Arah</span><b className="positive">{selected.type}</b></div><div><span>Entry</span><b>{fmt(selected.entryZoneStart)}</b></div><div><span>Take Profit 1 (TP1)</span><b>{fmt(selected.tp1)}</b></div><div><span>Take Profit 2 (TP2)</span><b>{fmt(selected.tp2)}</b></div><div><span>Stop Loss (SL)</span><b>{fmt(selected.stopLoss)}</b></div><div><span>Status</span><StatusPill active={selected.status === 'active'} /></div></div></div></div>}</main>;
 }
