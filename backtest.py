@@ -3,7 +3,7 @@
 simulate.ts, report.ts, okxHistory.ts).
 
 Usage:
-    python backtest.py [days] [--irga-history PATH]   # days default 90
+    python backtest.py [days] [--irga-history PATH] [--fee-bps N] [--slippage-bps N] [--split-ratio R]
 
 --irga-history PATH  Opsional. Aktifkan overlay IRGA (lihat
     engine/irga.py) selama backtest, dibaca dari file JSON point-in-time
@@ -11,6 +11,31 @@ Usage:
     kenapa live API tidak bisa dipakai untuk ini (tidak ada endpoint
     historis, hanya /latest). Tanpa flag ini backtest berjalan identik
     dengan sebelum overlay ada.
+
+--fee-bps N          Opsional, default 5 (0.05%, taker fee OKX futures per
+    sisi). Diterapkan 2x per trade (entry + exit).
+
+--slippage-bps N     Opsional, default 2 (0.02% per sisi, estimasi kasar
+    untuk BTC-USDT-SWAP -- market cukup likuid tapi entry/exit market-order
+    di 5m timeframe realistis meleset beberapa bps dari harga yang dipakai
+    scoring). Diterapkan 2x per trade sama seperti fee.
+
+    Kenapa ini penting: `cumulativeR` versi lama (dan `computeStats` di
+    dashboard) menghitung R murni dari selisih harga tanpa biaya sama
+    sekali. Untuk strategi scalping di 5m, fee+slippage round-trip bisa
+    memakan porsi signifikan dari edge teoritis -- laporan sekarang
+    menampilkan grossR (versi lama, tanpa biaya) BERDAMPINGAN dengan netR
+    (dikurangi estimasi biaya), supaya jelas berapa dari "profit" itu yang
+    riil vs yang bakal hilang kena fee/slippage saat live.
+
+--split-ratio R       Opsional, default 0.5. Selain laporan agregat penuh,
+    backtest juga membagi periode jadi dua segmen berurutan (rasio R:1-R)
+    dan melaporkan performa tiap segmen terpisah. ROI/win-rate yang cuma
+    bagus di satu segmen tapi jelek di segmen lain adalah tanda kuat
+    overfitting terhadap satu rezim pasar, bukan edge yang robust -- catatan:
+    ini BUKAN walk-forward parameter tuning (scoring.py tidak punya
+    parameter yang di-fit dari data), melainkan pengecekan konsistensi
+    performa antar periode waktu.
 
 Fetch candle historis 5m & 15m BTC-USDT-SWAP dari OKX, jalankan lewat
 scoring logic PERSIS SAMA dengan yang dipakai run_bot.py (import dari
@@ -31,6 +56,13 @@ import okx_client
 WINDOW = 100
 SCORE_SEND_THRESHOLD = 70
 SCORE_WATCHLIST_THRESHOLD = 50
+
+# Estimasi biaya round-trip, dalam basis poin (1 bps = 0.01%), SATU SISI.
+# Diterapkan 2x per trade (entry + exit) di apply_costs(). Ini estimasi kasar
+# untuk order market di BTC-USDT-SWAP OKX -- kalau kamu tahu fee tier akun
+# atau slippage riil yang berbeda, override lewat --fee-bps/--slippage-bps.
+DEFAULT_FEE_BPS = 5.0        # 0.05% taker fee (tier dasar OKX futures)
+DEFAULT_SLIPPAGE_BPS = 2.0   # 0.02% estimasi slippage market-order
 
 
 def _iso(ms: int) -> str:
@@ -191,10 +223,47 @@ def build_win_rate_report(signals):
     }
 
 
-def build_performance_report(signals):
+def apply_costs(gross_r: float, entry_ref: float, closed_price: float, risk: float, fee_bps: float, slippage_bps: float):
+    """Estimasi biaya round-trip (fee + slippage, masing-masing dikenakan di
+    ENTRY dan EXIT) dan kembalikan (net_r, cost_r).
+
+    Asumsi: fee & slippage dihitung sebagai persentase dari harga entry dan
+    harga exit (bukan dari risk), lalu dikonversi ke satuan R dengan dibagi
+    `risk` (jarak entry->SL, definisi 1R yang sama dipakai di seluruh kode
+    ini -- lihat computeStats() di dashboard/src/lib/stats.ts).
+
+    Ini estimasi, bukan simulasi order-book -- untuk BTC-USDT-SWAP yang
+    likuid, slippage riil untuk ukuran posisi kecil-menengah biasanya lebih
+    kecil dari estimasi ini, tapi bisa lebih besar saat volatilitas tinggi
+    (persis saat sinyal RVOL/pattern breakout paling sering terpicu --
+    artinya estimasi flat ini kemungkinan MENGUNDERESTIMATE biaya riil pada
+    kondisi market yang justru paling sering memicu sinyal).
+    """
+    rate = (fee_bps + slippage_bps) / 10_000.0
+    cost_price = abs(entry_ref) * rate + abs(closed_price) * rate
+    cost_r = cost_price / risk if risk else 0.0
+    net_r = round(gross_r - cost_r, 3)
+    return net_r, round(cost_r, 3)
+
+
+def build_performance_report(signals, fee_bps: float = DEFAULT_FEE_BPS, slippage_bps: float = DEFAULT_SLIPPAGE_BPS):
+    """Hitung cumulative R dua versi:
+
+    - grossR: selisih harga murni / risk, TANPA biaya (sama seperti
+      computeStats() di dashboard -- ini angka yang ditampilkan Discord/UI).
+    - netR: grossR dikurangi estimasi fee+slippage (lihat apply_costs()).
+
+    Juga menghitung `falseWins`: trade yang statusnya tp1_hit/tp2_hit
+    ("win" dari sisi harga) tapi netR <= 0 setelah biaya -- indikator
+    seberapa besar porsi "kemenangan" yang sebenarnya rugi net-of-cost.
+    Kalau angka ini besar relatif ke total wins, win rate yang ditampilkan
+    dashboard menyesatkan soal profitabilitas riil.
+    """
     closed = [s for s in signals if s["status"] not in ("watchlist", "active") and s.get("closedPrice") is not None]
 
-    cumulative_r = 0.0
+    cumulative_gross_r = 0.0
+    cumulative_net_r = 0.0
+    false_wins = 0
     monthly = {}
 
     for s in closed:
@@ -204,24 +273,66 @@ def build_performance_report(signals):
             continue
 
         move = (s["closedPrice"] - entry_ref) if s["type"] == "LONG" else (entry_ref - s["closedPrice"])
-        r = round(move / risk, 3)
-        cumulative_r = round(cumulative_r + r, 3)
+        gross_r = round(move / risk, 3)
+        net_r, cost_r = apply_costs(gross_r, entry_ref, s["closedPrice"], risk, fee_bps, slippage_bps)
+
+        if s["status"] in ("tp1_hit", "tp2_hit") and net_r <= 0:
+            false_wins += 1
+
+        cumulative_gross_r = round(cumulative_gross_r + gross_r, 3)
+        cumulative_net_r = round(cumulative_net_r + net_r, 3)
 
         month_key = s["closedAt"][:7]
-        b = monthly.setdefault(month_key, {"trades": 0, "wins": 0, "losses": 0, "netR": 0})
+        b = monthly.setdefault(month_key, {"trades": 0, "wins": 0, "losses": 0, "grossR": 0, "netR": 0})
         b["trades"] += 1
-        if r > 0:
+        if gross_r > 0:
             b["wins"] += 1
-        if r < 0:
+        if gross_r < 0:
             b["losses"] += 1
-        b["netR"] = round(b["netR"] + r, 3)
+        b["grossR"] = round(b["grossR"] + gross_r, 3)
+        b["netR"] = round(b["netR"] + net_r, 3)
 
-    return {"finalCumulativeR": cumulative_r, "monthly": monthly}
+    return {
+        "costAssumptions": {"feeBps": fee_bps, "slippageBps": slippage_bps, "note": "per sisi, diterapkan di entry & exit"},
+        "finalCumulativeGrossR": cumulative_gross_r,
+        "finalCumulativeNetR": cumulative_net_r,
+        "falseWins": false_wins,
+        "closedTrades": len(closed),
+        "monthly": monthly,
+    }
+
+
+def split_by_time(signals, ratio: float = 0.5):
+    """Bagi `signals` jadi dua segmen berurutan berdasarkan createdAt,
+    bukan berdasarkan index list (list bisa berisi campuran 5m+15m yang
+    tidak terurut waktu). `ratio` = proporsi durasi waktu untuk segmen
+    pertama (bukan proporsi jumlah sinyal -- supaya pembagian representasi
+    waktu kalender, bukan sekadar jumlah trade).
+
+    Catatan penting (lihat juga docstring modul): ini BUKAN walk-forward
+    parameter optimization, karena scoring.py tidak punya parameter yang
+    di-fit dari data historis. Ini murni pengecekan "apakah performa
+    konsisten across periode", untuk mendeteksi hasil yang cuma bagus
+    karena kebetulan cocok dengan satu rezim pasar (mis. bull run kencang)
+    di dalam window backtest.
+    """
+    if not signals:
+        return [], []
+    timestamps = [datetime.fromisoformat(s["createdAt"]) for s in signals]
+    t_min, t_max = min(timestamps), max(timestamps)
+    cutoff = t_min + (t_max - t_min) * ratio
+    first, second = [], []
+    for s, t in zip(signals, timestamps):
+        (first if t <= cutoff else second).append(s)
+    return first, second
 
 
 def _parse_args(argv):
     days = 90
     irga_history_path = None
+    fee_bps = DEFAULT_FEE_BPS
+    slippage_bps = DEFAULT_SLIPPAGE_BPS
+    split_ratio = 0.5
     positional_consumed = False
     i = 0
     while i < len(argv):
@@ -233,16 +344,43 @@ def _parse_args(argv):
             irga_history_path = argv[i + 1]
             i += 2
             continue
+        if arg == "--fee-bps":
+            if i + 1 >= len(argv):
+                print("--fee-bps butuh angka, contoh: --fee-bps 5")
+                sys.exit(1)
+            fee_bps = float(argv[i + 1])
+            i += 2
+            continue
+        if arg == "--slippage-bps":
+            if i + 1 >= len(argv):
+                print("--slippage-bps butuh angka, contoh: --slippage-bps 2")
+                sys.exit(1)
+            slippage_bps = float(argv[i + 1])
+            i += 2
+            continue
+        if arg == "--split-ratio":
+            if i + 1 >= len(argv):
+                print("--split-ratio butuh angka 0-1, contoh: --split-ratio 0.5")
+                sys.exit(1)
+            split_ratio = float(argv[i + 1])
+            i += 2
+            continue
         if not positional_consumed:
             days = int(arg)
             positional_consumed = True
         i += 1
-    return days, irga_history_path
+    return days, irga_history_path, fee_bps, slippage_bps, split_ratio
+
+
+def _print_performance(label, perf):
+    print(f"  [{label}] closed trades: {perf['closedTrades']}, false wins (TP hit tapi netR<=0): {perf['falseWins']}")
+    print(f"  [{label}] grossR: {perf['finalCumulativeGrossR']}  |  netR (setelah fee+slippage): {perf['finalCumulativeNetR']}")
 
 
 def main():
-    days, irga_history_path = _parse_args(sys.argv[1:])
+    days, irga_history_path, fee_bps, slippage_bps, split_ratio = _parse_args(sys.argv[1:])
     print(f"\nBTC Signal System -- Backtest ({days} hari)\n")
+    print(f"Cost assumptions: {fee_bps} bps fee + {slippage_bps} bps slippage per sisi (override via --fee-bps/--slippage-bps)\n")
 
     irga_hist = None
     if irga_history_path:
@@ -274,7 +412,11 @@ def main():
     still_active = [s for s in actionable if s["status"] == "active"]
 
     win_rate_report = build_win_rate_report(all_signals)
-    performance_report = build_performance_report(all_signals)
+    performance_report = build_performance_report(all_signals, fee_bps=fee_bps, slippage_bps=slippage_bps)
+
+    first_half, second_half = split_by_time(actionable, ratio=split_ratio)
+    perf_first = build_performance_report(first_half, fee_bps=fee_bps, slippage_bps=slippage_bps)
+    perf_second = build_performance_report(second_half, fee_bps=fee_bps, slippage_bps=slippage_bps)
 
     print("\n=== Summary ===")
     print(f"Actionable signals (score >= 70): {len(actionable)}")
@@ -282,7 +424,18 @@ def main():
     print(f"Still open at end of window:      {len(still_active)}")
     overall = win_rate_report["overall"]
     print(f"Win rate (TP1/TP2 vs SL): {overall['winRate']}% ({overall['wins']}W / {overall['losses']}L)")
-    print(f"Final cumulative R (1% risk/trade): {performance_report['finalCumulativeR']}")
+    print(f"Final cumulative grossR (tanpa biaya, = angka lama):  {performance_report['finalCumulativeGrossR']}")
+    print(f"Final cumulative netR   (setelah fee+slippage):       {performance_report['finalCumulativeNetR']}")
+    if performance_report["closedTrades"]:
+        false_win_pct = round(performance_report["falseWins"] / performance_report["closedTrades"] * 100, 1)
+        print(f"False wins (TP hit tapi rugi net-of-cost): {performance_report['falseWins']} / {performance_report['closedTrades']} closed ({false_win_pct}%)")
+
+    print(f"\n=== Konsistensi antar periode (split ratio {split_ratio}, BUKAN parameter tuning) ===")
+    _print_performance("Periode 1 (lebih awal)", perf_first)
+    _print_performance("Periode 2 (lebih akhir)", perf_second)
+    if perf_first["finalCumulativeNetR"] > 0 and perf_second["finalCumulativeNetR"] <= 0 or \
+       perf_first["finalCumulativeNetR"] <= 0 and perf_second["finalCumulativeNetR"] > 0:
+        print("  PERINGATAN: hasil netR berlawanan tanda antar periode -- indikasi kuat hasil agregat tidak robust / bergantung rezim pasar tertentu.")
 
     output_dir = os.path.join(os.path.dirname(__file__), "backtest_output")
     os.makedirs(output_dir, exist_ok=True)
@@ -292,7 +445,13 @@ def main():
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(
             {
-                "params": {"days": days, "generatedAt": datetime.now(timezone.utc).isoformat()},
+                "params": {
+                    "days": days,
+                    "generatedAt": datetime.now(timezone.utc).isoformat(),
+                    "feeBps": fee_bps,
+                    "slippageBps": slippage_bps,
+                    "splitRatio": split_ratio,
+                },
                 "summary": {
                     "actionableSignals": len(actionable),
                     "watchlistEntries": len(watchlist),
@@ -300,6 +459,7 @@ def main():
                 },
                 "winRate": win_rate_report,
                 "performance": performance_report,
+                "periodConsistency": {"period1": perf_first, "period2": perf_second},
                 "signals": all_signals,
             },
             f,
