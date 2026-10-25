@@ -1,283 +1,10 @@
 {
   "fetch_cursor": {
-    "5m": 1792953900000,
-    "15m": 1792953000000
+    "5m": 1792962600000,
+    "15m": 1792962000000
   },
-  "next_signal_id": 4449,
+  "next_signal_id": 4461,
   "signals": [
-    {
-      "timeframe": "15m",
-      "type": "LONG",
-      "patterns": [
-        "inside_bar",
-        "bullish_bos",
-        "bullish_choch"
-      ],
-      "score": 68,
-      "rvol": 1.9298079606395686,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 83208.375,
-      "entryZoneEnd": 83291.625,
-      "stopLoss": 82947.28928571429,
-      "tp1": 83653.61428571428,
-      "tp2": 84057.22857142857,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791547200000,
-      "createdAt": "2026-10-09T13:26:35.798581+00:00",
-      "id": 2449
-    },
-    {
-      "timeframe": "15m",
-      "type": "SHORT",
-      "patterns": [
-        "bearish_engulfing"
-      ],
-      "score": 65,
-      "rvol": 1.1898753473524752,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 83118.03825,
-      "entryZoneEnd": 83034.96175,
-      "stopLoss": 83387.86785714286,
-      "tp1": 82661.34285714285,
-      "tp2": 82246.18571428572,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791548100000,
-      "createdAt": "2026-10-09T13:26:35.799301+00:00",
-      "id": 2450
-    },
-    {
-      "timeframe": "15m",
-      "type": "LONG",
-      "patterns": [
-        "bullish_engulfing"
-      ],
-      "score": 64,
-      "rvol": 0.6806329058653113,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 82977.8903,
-      "entryZoneEnd": 83060.90969999999,
-      "stopLoss": 82683.87142857142,
-      "tp1": 83466.77142857142,
-      "tp2": 83914.14285714286,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791550800000,
-      "createdAt": "2026-10-09T13:26:35.801297+00:00",
-      "id": 2451
-    },
-    {
-      "timeframe": "5m",
-      "type": "SHORT",
-      "patterns": [
-        "bearish_engulfing"
-      ],
-      "score": 58,
-      "rvol": 0.5461649538446088,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 82538.0484,
-      "entryZoneEnd": 82455.5516,
-      "stopLoss": 82577.38214285715,
-      "tp1": 82389.35714285714,
-      "tp2": 82281.91428571429,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791529200000,
-      "createdAt": "2026-10-09T13:26:35.802215+00:00",
-      "id": 2452
-    },
-    {
-      "timeframe": "5m",
-      "type": "LONG",
-      "patterns": [
-        "bullish_engulfing"
-      ],
-      "score": 61,
-      "rvol": 0.7495334936223885,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 82508.62505,
-      "entryZoneEnd": 82591.17494999999,
-      "stopLoss": 82464.1107142857,
-      "tp1": 82664.28571428571,
-      "tp2": 82778.67142857143,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791530400000,
-      "createdAt": "2026-10-09T13:26:35.802733+00:00",
-      "id": 2453
-    },
-    {
-      "timeframe": "5m",
-      "type": "LONG",
-      "patterns": [
-        "bullish_engulfing"
-      ],
-      "score": 62,
-      "rvol": 1.5448346769911143,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 82482.738,
-      "entryZoneEnd": 82565.262,
-      "stopLoss": 82423.85357142857,
-      "tp1": 82657.52857142857,
-      "tp2": 82791.05714285714,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791532200000,
-      "createdAt": "2026-10-09T13:26:35.803662+00:00",
-      "id": 2454
-    },
-    {
-      "timeframe": "5m",
-      "type": "LONG",
-      "patterns": [
-        "bullish_engulfing",
-        "bullish_bos",
-        "bullish_choch"
-      ],
-      "score": 64,
-      "rvol": 1.4947858867349944,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 82598.58005,
-      "entryZoneEnd": 82681.21994999998,
-      "stopLoss": 82532.26428571428,
-      "tp1": 82783.41428571429,
-      "tp2": 82926.92857142857,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791533100000,
-      "createdAt": "2026-10-09T13:26:35.804213+00:00",
-      "id": 2455
-    },
-    {
-      "timeframe": "5m",
-      "type": "LONG",
-      "patterns": [
-        "bullish_pinbar",
-        "inside_bar",
-        "bullish_bos",
-        "bullish_choch"
-      ],
-      "score": 64,
-      "rvol": 1.3377972579439572,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 82605.37665,
-      "entryZoneEnd": 82688.02334999999,
-      "stopLoss": 82540.45714285714,
-      "tp1": 82788.35714285714,
-      "tp2": 82930.01428571428,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791533400000,
-      "createdAt": "2026-10-09T13:26:35.804422+00:00",
-      "id": 2456
-    },
-    {
-      "timeframe": "5m",
-      "type": "SHORT",
-      "patterns": [
-        "bearish_engulfing"
-      ],
-      "score": 60,
-      "rvol": 0.8660037087487551,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 82635.8973,
-      "entryZoneEnd": 82553.30270000001,
-      "stopLoss": 82701.97857142858,
-      "tp1": 82451.42857142858,
-      "tp2": 82308.25714285715,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791533700000,
-      "createdAt": "2026-10-09T13:26:35.804798+00:00",
-      "id": 2457
-    },
-    {
-      "timeframe": "5m",
-      "type": "SHORT",
-      "patterns": [
-        "bearish_engulfing"
-      ],
-      "score": 63,
-      "rvol": 1.1188150530333356,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 82575.76724999999,
-      "entryZoneEnd": 82493.23275000001,
-      "stopLoss": 82646.71071428571,
-      "tp1": 82384.88571428572,
-      "tp2": 82235.27142857143,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791536400000,
-      "createdAt": "2026-10-09T13:26:35.806742+00:00",
-      "id": 2458
-    },
-    {
-      "timeframe": "5m",
-      "type": "SHORT",
-      "patterns": [
-        "bearish_pinbar",
-        "inside_bar"
-      ],
-      "score": 60,
-      "rvol": 0.8297539339860394,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 82643.7012,
-      "entryZoneEnd": 82561.09879999999,
-      "stopLoss": 82708.825,
-      "tp1": 82460.5,
-      "tp2": 82318.59999999999,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791537900000,
-      "createdAt": "2026-10-09T13:26:35.808043+00:00",
-      "id": 2459
-    },
-    {
-      "timeframe": "5m",
-      "type": "LONG",
-      "patterns": [
-        "bullish_engulfing",
-        "bullish_pinbar"
-      ],
-      "score": 61,
-      "rvol": 0.21390579780413277,
-      "takerBuyRatio": 0.5,
-      "entryZoneStart": 82569.39465,
-      "entryZoneEnd": 82652.00534999999,
-      "stopLoss": 82512.12857142856,
-      "tp1": 82742.12857142856,
-      "tp2": 82873.55714285714,
-      "irgaPUp": 0.5122,
-      "irgaVolTier": "calm",
-      "sizeMultiplier": 0.89,
-      "status": "watchlist",
-      "candleOpenTime": 1791538200000,
-      "createdAt": "2026-10-09T13:26:35.808405+00:00",
-      "id": 2460
-    },
     {
       "timeframe": "5m",
       "type": "SHORT",
@@ -44532,10 +44259,12 @@
       "irgaPUp": 0.507,
       "irgaVolTier": "calm",
       "sizeMultiplier": 0.75,
-      "status": "active",
+      "status": "sl_hit",
       "candleOpenTime": 1792908000000,
       "createdAt": "2026-10-25T06:45:43.268630+00:00",
-      "id": 4393
+      "id": 4393,
+      "closedPrice": 80459.5,
+      "closedAt": "2026-10-25T21:18:36.447562+00:00"
     },
     {
       "timeframe": "15m",
@@ -45610,10 +45339,12 @@
       "irgaPUp": 0.5091,
       "irgaVolTier": "high",
       "sizeMultiplier": 0.43,
-      "status": "active",
+      "status": "sl_hit",
       "candleOpenTime": 1792940100000,
       "createdAt": "2026-10-25T16:02:29.532245+00:00",
-      "id": 4440
+      "id": 4440,
+      "closedPrice": 80459.5,
+      "closedAt": "2026-10-25T21:18:36.447562+00:00"
     },
     {
       "timeframe": "5m",
@@ -45795,83 +45526,284 @@
       "candleOpenTime": 1792952100000,
       "createdAt": "2026-10-25T18:54:23.539153+00:00",
       "id": 4448
+    },
+    {
+      "timeframe": "15m",
+      "type": "SHORT",
+      "patterns": [
+        "bearish_pinbar",
+        "bearish_choch"
+      ],
+      "score": 60,
+      "rvol": 0.35136517474869794,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80669.41455,
+      "entryZoneEnd": 80588.78545000001,
+      "stopLoss": 80797.29285714286,
+      "tp1": 80404.84285714287,
+      "tp2": 80180.58571428573,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792953900000,
+      "createdAt": "2026-10-25T21:18:36.166206+00:00",
+      "id": 4449
+    },
+    {
+      "timeframe": "15m",
+      "type": "SHORT",
+      "patterns": [
+        "inside_bar",
+        "bearish_choch"
+      ],
+      "score": 52,
+      "rvol": 0.3590383286328058,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80560.26,
+      "entryZoneEnd": 80479.74,
+      "stopLoss": 80688.63214285714,
+      "tp1": 80295.15714285715,
+      "tp2": 80070.31428571428,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792955700000,
+      "createdAt": "2026-10-25T21:18:36.168041+00:00",
+      "id": 4450
+    },
+    {
+      "timeframe": "15m",
+      "type": "LONG",
+      "patterns": [
+        "bullish_pinbar"
+      ],
+      "score": 64,
+      "rvol": 1.2024264277185297,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80524.21775000001,
+      "entryZoneEnd": 80604.78224999999,
+      "stopLoss": 80397.64642857143,
+      "tp1": 80786.97142857143,
+      "tp2": 81009.44285714286,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792958400000,
+      "createdAt": "2026-10-25T21:18:36.170828+00:00",
+      "id": 4451
+    },
+    {
+      "timeframe": "15m",
+      "type": "SHORT",
+      "patterns": [
+        "bearish_engulfing",
+        "inside_bar"
+      ],
+      "score": 60,
+      "rvol": 0.267099478473993,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80551.2555,
+      "entryZoneEnd": 80470.7445,
+      "stopLoss": 80657.65714285715,
+      "tp1": 80315.45714285715,
+      "tp2": 80119.91428571429,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792959300000,
+      "createdAt": "2026-10-25T21:18:36.171813+00:00",
+      "id": 4452
+    },
+    {
+      "timeframe": "15m",
+      "type": "LONG",
+      "patterns": [
+        "bullish_pinbar"
+      ],
+      "score": 68,
+      "rvol": 1.561593296635759,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80421.56910000001,
+      "entryZoneEnd": 80502.0309,
+      "stopLoss": 80323.75714285715,
+      "tp1": 80645.85714285714,
+      "tp2": 80829.91428571429,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792961100000,
+      "createdAt": "2026-10-25T21:18:36.173784+00:00",
+      "id": 4453
+    },
+    {
+      "timeframe": "5m",
+      "type": "SHORT",
+      "patterns": [
+        "bearish_engulfing"
+      ],
+      "score": 63,
+      "rvol": 1.3565818851964249,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80572.96634999999,
+      "entryZoneEnd": 80492.43365,
+      "stopLoss": 80608.05357142857,
+      "tp1": 80432.22857142857,
+      "tp2": 80331.75714285714,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792955100000,
+      "createdAt": "2026-10-25T21:18:36.176983+00:00",
+      "id": 4454
+    },
+    {
+      "timeframe": "5m",
+      "type": "SHORT",
+      "patterns": [
+        "bearish_pinbar"
+      ],
+      "score": 60,
+      "rvol": 0.8040947826988721,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80560.26,
+      "entryZoneEnd": 80479.74,
+      "stopLoss": 80585.28214285715,
+      "tp1": 80432.95714285715,
+      "tp2": 80345.91428571429,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792956300000,
+      "createdAt": "2026-10-25T21:18:36.179302+00:00",
+      "id": 4455
+    },
+    {
+      "timeframe": "5m",
+      "type": "SHORT",
+      "patterns": [
+        "bearish_engulfing"
+      ],
+      "score": 57,
+      "rvol": 0.9214522536386313,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80602.58115,
+      "entryZoneEnd": 80522.01885000001,
+      "stopLoss": 80630.44285714286,
+      "tp1": 80471.44285714286,
+      "tp2": 80380.58571428571,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792957500000,
+      "createdAt": "2026-10-25T21:18:36.181727+00:00",
+      "id": 4456
+    },
+    {
+      "timeframe": "5m",
+      "type": "SHORT",
+      "patterns": [
+        "bearish_bos",
+        "bearish_choch"
+      ],
+      "score": 69,
+      "rvol": 4.7635701267708646,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80527.2435,
+      "entryZoneEnd": 80446.7565,
+      "stopLoss": 80557.75714285714,
+      "tp1": 80392.65714285715,
+      "tp2": 80298.31428571428,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792958400000,
+      "createdAt": "2026-10-25T21:18:36.183651+00:00",
+      "id": 4457
+    },
+    {
+      "timeframe": "5m",
+      "type": "SHORT",
+      "patterns": [
+        "bearish_pinbar"
+      ],
+      "score": 54,
+      "rvol": 0.39829179085796423,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80579.56965,
+      "entryZoneEnd": 80499.03035,
+      "stopLoss": 80616.41071428571,
+      "tp1": 80436.48571428572,
+      "tp2": 80333.67142857143,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792959600000,
+      "createdAt": "2026-10-25T21:18:36.186314+00:00",
+      "id": 4458
+    },
+    {
+      "timeframe": "5m",
+      "type": "SHORT",
+      "patterns": [
+        "bearish_pinbar",
+        "inside_bar"
+      ],
+      "score": 60,
+      "rvol": 0.591002413090433,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80542.55115,
+      "entryZoneEnd": 80462.04885,
+      "stopLoss": 80579.48571428572,
+      "tp1": 80399.38571428572,
+      "tp2": 80296.47142857143,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792960500000,
+      "createdAt": "2026-10-25T21:18:36.188392+00:00",
+      "id": 4459
+    },
+    {
+      "timeframe": "5m",
+      "type": "SHORT",
+      "patterns": [
+        "bearish_engulfing",
+        "bearish_bos",
+        "bearish_choch"
+      ],
+      "score": 68,
+      "rvol": 1.7836005293002097,
+      "takerBuyRatio": 0.5,
+      "entryZoneStart": 80477.61869999999,
+      "entryZoneEnd": 80397.1813,
+      "stopLoss": 80524.25,
+      "tp1": 80321.59999999999,
+      "tp2": 80205.79999999999,
+      "irgaPUp": 0.5067,
+      "irgaVolTier": "high",
+      "sizeMultiplier": 0.5,
+      "status": "watchlist",
+      "candleOpenTime": 1792961400000,
+      "createdAt": "2026-10-25T21:18:36.190529+00:00",
+      "id": 4460
     }
   ],
   "error_logs": [],
-  "last_price": 80625.3,
-  "last_run_at": "2026-10-25T18:54:24.900947+00:00",
+  "last_price": 80459.5,
+  "last_run_at": "2026-10-25T21:18:37.127167+00:00",
   "candles": {
     "15m": [
-      {
-        "t": 1792899900000,
-        "o": 80893.6,
-        "h": 80893.7,
-        "l": 80819.0,
-        "c": 80826.6
-      },
-      {
-        "t": 1792900800000,
-        "o": 80826.6,
-        "h": 80847.9,
-        "l": 80786.1,
-        "c": 80815.1
-      },
-      {
-        "t": 1792901700000,
-        "o": 80815.1,
-        "h": 80852.0,
-        "l": 80811.5,
-        "c": 80845.1
-      },
-      {
-        "t": 1792902600000,
-        "o": 80845.0,
-        "h": 80915.5,
-        "l": 80835.7,
-        "c": 80902.6
-      },
-      {
-        "t": 1792903500000,
-        "o": 80902.6,
-        "h": 80925.9,
-        "l": 80896.3,
-        "c": 80896.3
-      },
-      {
-        "t": 1792904400000,
-        "o": 80896.4,
-        "h": 80896.7,
-        "l": 80870.1,
-        "c": 80870.1
-      },
-      {
-        "t": 1792905300000,
-        "o": 80870.1,
-        "h": 80870.2,
-        "l": 80793.8,
-        "c": 80793.8
-      },
-      {
-        "t": 1792906200000,
-        "o": 80793.8,
-        "h": 80793.9,
-        "l": 80532.7,
-        "c": 80546.9
-      },
-      {
-        "t": 1792907100000,
-        "o": 80546.8,
-        "h": 80583.8,
-        "l": 80459.6,
-        "c": 80578.7
-      },
-      {
-        "t": 1792908000000,
-        "o": 80578.7,
-        "h": 80648.6,
-        "l": 80499.0,
-        "c": 80605.8
-      },
       {
         "t": 1792908900000,
         "o": 80605.9,
@@ -46221,6 +46153,76 @@
         "h": 80689.1,
         "l": 80630.0,
         "c": 80640.0
+      },
+      {
+        "t": 1792953900000,
+        "o": 80640.0,
+        "h": 80669.9,
+        "l": 80613.3,
+        "c": 80629.1
+      },
+      {
+        "t": 1792954800000,
+        "o": 80629.1,
+        "h": 80649.1,
+        "l": 80509.5,
+        "c": 80573.5
+      },
+      {
+        "t": 1792955700000,
+        "o": 80573.5,
+        "h": 80595.0,
+        "l": 80520.0,
+        "c": 80520.0
+      },
+      {
+        "t": 1792956600000,
+        "o": 80520.1,
+        "h": 80592.7,
+        "l": 80520.0,
+        "c": 80581.3
+      },
+      {
+        "t": 1792957500000,
+        "o": 80581.3,
+        "h": 80588.5,
+        "l": 80525.5,
+        "c": 80540.9
+      },
+      {
+        "t": 1792958400000,
+        "o": 80540.8,
+        "h": 80595.2,
+        "l": 80445.5,
+        "c": 80564.5
+      },
+      {
+        "t": 1792959300000,
+        "o": 80564.6,
+        "h": 80583.5,
+        "l": 80511.0,
+        "c": 80511.0
+      },
+      {
+        "t": 1792960200000,
+        "o": 80511.1,
+        "h": 80540.0,
+        "l": 80426.2,
+        "c": 80447.4
+      },
+      {
+        "t": 1792961100000,
+        "o": 80447.3,
+        "h": 80476.0,
+        "l": 80399.0,
+        "c": 80461.8
+      },
+      {
+        "t": 1792962000000,
+        "o": 80461.9,
+        "h": 80499.0,
+        "l": 80433.1,
+        "c": 80465.3
       }
     ]
   }
